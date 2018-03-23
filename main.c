@@ -16,21 +16,6 @@ typedef struct _image {
     unsigned int height;
 } Image;
 
-
-// int max(int a, int b) {
-//     if (a > b)
-//         return a;
-//     return b;
-// }
-
-// int pixel_igual(Pixel p1, Pixel p2) {
-//     if (p1.r == p2.r &&
-//         p1.g == p2.g &&
-//         p1.b == p2.b)
-//         return 1;
-//     return 0;
-// }
-
 Image escala_de_cinza(Image img) {
     for (unsigned int i = 0; i < img.height; ++i) {
         for (unsigned int j = 0; j < img.width; ++j) {
@@ -119,27 +104,107 @@ Image cortar_imagem(Image img, int x, int y, int width, int height) {
     return cortada;
 }
 
+void sepia(Image *img) {
+  for (unsigned int x = 0; x < img->height; ++x) {
+      for (unsigned int j = 0; j < img->width; ++j) {
+          unsigned short int pixel[3];
+          pixel[0] = img->pixel[x][j][0];
+          pixel[1] = img->pixel[x][j][1];
+          pixel[2] = img->pixel[x][j][2];
+
+          int p =  (pixel[0] * .393) + (pixel[1] * .769) + (pixel[2] * .189);
+          int menor_r = (255 >  p) ? p : 255;
+          img->pixel[x][j][0] = menor_r;
+
+          p =  (pixel[0] * .349) + (pixel[1] * .686) + (pixel[2] * .168);
+          menor_r = (255 >  p) ? p : 255;
+          img->pixel[x][j][1] = menor_r;
+
+          p =  (pixel[0] * .272) + (pixel[1] * .534) + (pixel[2] * .131);
+          menor_r = (255 >  p) ? p : 255;
+          img->pixel[x][j][2] = menor_r;
+      }
+  }
+}
+
+void espelhar(Image *img) {
+    int horizontal = 0;
+    scanf("%d", &horizontal);
+
+    int width = img->width, height = img->height;
+
+    if (horizontal == 1) width /= 2;
+    else height /= 2;
+
+    for (int i2 = 0; i2 < height; ++i2) {
+        for (int j = 0; j < height; ++j) {
+            int x = i2, y = j;
+
+            if (horizontal == 1) y = img->width - 1 - j;
+            else x = img->height - 1 - i2;
+
+            Pixel aux1;
+            aux1.r = img->pixel[i2][j][0];
+            aux1.g = img->pixel[i2][j][1];
+            aux1.b = img->pixel[i2][j][2];
+
+            img->pixel[i2][j][0] = img->pixel[x][y][0];
+            img->pixel[i2][j][1] = img->pixel[x][y][1];
+            img->pixel[i2][j][2] = img->pixel[x][y][2];
+
+            img->pixel[x][y][0] = aux1.r;
+            img->pixel[x][y][1] = aux1.g;
+            img->pixel[x][y][2] = aux1.b;
+        }
+    }
+}
+
+void imprimir_imagem(Image *img) {
+    // print type of image
+    printf("P3\n");
+    // print width height and color of image
+    printf("%u %u\n255\n", img->width, img->height);
+
+    // print pixels of image
+    for (unsigned int i = 0; i < img->height; ++i) {
+        for (unsigned int j = 0; j < img->width; ++j) {
+            printf("%hu %hu %hu ", img->pixel[i][j][0],
+                                   img->pixel[i][j][1],
+                                   img->pixel[i][j][2]);
+
+        }
+        printf("\n");
+    }
+}
+
+Image definir_imagem() {
+  Image img;
+
+  // read type of image
+  char p3[4];
+  scanf("%s", p3);
+
+  // read width height and color of image
+  int max_color;
+  scanf("%u %u %d", &img.width, &img.height, &max_color);
+
+  // read all pixels of image
+  for (unsigned int i = 0; i < img.height; ++i) {
+      for (unsigned int j = 0; j < img.width; ++j) {
+          scanf("%hu %hu %hu", &img.pixel[i][j][0],
+                               &img.pixel[i][j][1],
+                               &img.pixel[i][j][2]);
+
+      }
+  }
+
+  return img;
+}
 
 int main() {
     Image img;
 
-    // read type of image
-    char p3[4];
-    scanf("%s", p3);
-
-    // read width height and color of image
-    int max_color;
-    scanf("%u %u %d", &img.width, &img.height, &max_color);
-
-    // read all pixels of image
-    for (unsigned int i = 0; i < img.height; ++i) {
-        for (unsigned int j = 0; j < img.width; ++j) {
-            scanf("%hu %hu %hu", &img.pixel[i][j][0],
-                                 &img.pixel[i][j][1],
-                                 &img.pixel[i][j][2]);
-
-        }
-    }
+    img = definir_imagem();
 
     int n_opcoes;
     scanf("%d", &n_opcoes);
@@ -154,27 +219,7 @@ int main() {
                 break;
             }
             case 2: { // Filtro Sepia
-                for (unsigned int x = 0; x < img.height; ++x) {
-                    for (unsigned int j = 0; j < img.width; ++j) {
-                        unsigned short int pixel[3];
-                        pixel[0] = img.pixel[x][j][0];
-                        pixel[1] = img.pixel[x][j][1];
-                        pixel[2] = img.pixel[x][j][2];
-
-                        int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
-                        int menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][0] = menor_r;
-
-                        p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
-                        menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][1] = menor_r;
-
-                        p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
-                        menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][2] = menor_r;
-                    }
-                }
-
+                sepia(&img);
                 break;
             }
             case 3: { // Blur
@@ -193,35 +238,7 @@ int main() {
                 break;
             }
             case 5: { // Espelhamento
-                int horizontal = 0;
-                scanf("%d", &horizontal);
-
-                int width = img.width, height = img.height;
-
-                if (horizontal == 1) width /= 2;
-                else height /= 2;
-
-                for (int i2 = 0; i2 < height; ++i2) {
-                    for (int j = 0; j < height; ++j) {
-                        int x = i2, y = j;
-
-                        if (horizontal == 1) y = img.width - 1 - j;
-                        else x = img.height - 1 - i2;
-
-                        Pixel aux1;
-                        aux1.r = img.pixel[i2][j][0];
-                        aux1.g = img.pixel[i2][j][1];
-                        aux1.b = img.pixel[i2][j][2];
-
-                        img.pixel[i2][j][0] = img.pixel[x][y][0];
-                        img.pixel[i2][j][1] = img.pixel[x][y][1];
-                        img.pixel[i2][j][2] = img.pixel[x][y][2];
-
-                        img.pixel[x][y][0] = aux1.r;
-                        img.pixel[x][y][1] = aux1.g;
-                        img.pixel[x][y][2] = aux1.b;
-                    }
-                }
+                espelhar(&img);
                 break;
             }
             case 6: { // Inversao de Cores
@@ -241,20 +258,7 @@ int main() {
 
     }
 
-    // print type of image
-    printf("P3\n");
-    // print width height and color of image
-    printf("%u %u\n255\n", img.width, img.height);
+    imprimir_imagem(&img);
 
-    // print pixels of image
-    for (unsigned int i = 0; i < img.height; ++i) {
-        for (unsigned int j = 0; j < img.width; ++j) {
-            printf("%hu %hu %hu ", img.pixel[i][j][0],
-                                   img.pixel[i][j][1],
-                                   img.pixel[i][j][2]);
-
-        }
-        printf("\n");
-    }
     return 0;
 }
